@@ -40,7 +40,7 @@ devices:
 **Note:**  
 Some devices (confirmed on AUX  conditioner) return device **name** in chineese, like '奥克斯空调'.  
 Device renaming in 'AC Freedom' app does not affect. You can see empty **name** in '-S' option output or any artifacts.  
-So in case '-S' returns empty value and you plan to use HASS autodiscovery - the best way to configure yout device manually in config.yml and set 'self_discovery: False'.
+So in case '-S' returns empty value and you plan to use HASS autodiscovery - the best way to configure your device manually in config.yml and set 'self_discovery: False'.
 
 command line arguments: 
 
