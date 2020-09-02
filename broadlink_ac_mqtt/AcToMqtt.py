@@ -150,7 +150,7 @@ class AcToMqtt:
 				name = device.name.encode('ascii','ignore')
 				
 			device_array = { 
-				"name": name.decode("utf-8")
+				"name": str(name.decode("utf-8"))
 				#,"power_command_topic" : self.config["mqtt_topic_prefix"]+  device.status["macaddress"]+"/power/set"
 				,"mode_command_topic" : self.config["mqtt_topic_prefix"]+  device.status["macaddress"]+"/mode_homeassistant/set"
 				,"temperature_command_topic" : self.config["mqtt_topic_prefix"]  + device.status["macaddress"]+"/temp/set"
@@ -161,11 +161,17 @@ class AcToMqtt:
 				,"mode_state_topic" : self.config["mqtt_topic_prefix"]  + device.status["macaddress"]+"/mode_homeassistant/value"	
 				,"temperature_state_topic" : self.config["mqtt_topic_prefix"]  + device.status["macaddress"]+"/temp/value"	
 				,"fan_mode_state_topic" : self.config["mqtt_topic_prefix"]  + device.status["macaddress"]+"/fanspeed_homeassistant/value"	
-				,"fan_modes": ["Auto","Low","Medium", "High"]
+				,"fan_modes": ["Auto","Low","Medium", "High","Turbo","Mute"]
 				,"modes": ['off',"cool","heat","fan_only","dry"]
 				,"max_temp":32.0
 				,"min_temp":16.0
 				,"precision": 0.5
+				,"unique_id": device.status["macaddress"]
+				,"device" : {"ids":device.status["macaddress"],"name":str(name.decode("utf-8")),"model":'Aircon',"mf":"Broadlink","sw":broadlink.version}
+				
+				, "pl_avail":"online"
+				,"pl_not_avail":"offline"
+				,"availability_topic": self.config["mqtt_topic_prefix"]  +"LWT"
 			}
 			
 			devices_array[device.status["macaddress"]] = device_array
@@ -187,8 +193,11 @@ class AcToMqtt:
 		##If retain is set for MQTT, then retain it		
 		if(self.config["mqtt_auto_discovery_topic_retain"]):
 			retain = self.config["mqtt_auto_discovery_topic_retain"]
+			
 		else: 
 			retain = False	
+
+		logger.debug("HA config Retain set to: " + str(retain))
 			
 		##Loop da loop all devices and publish discovery settings
 		for key in devices_array:
@@ -340,9 +349,20 @@ class AcToMqtt:
 			else:
 				logger.debug("Mode has invalid value %s",value)
 				return
+	
 		elif function == "fanspeed":
-			
-			status = self.device_objects[address].set_fanspeed(value)
+			if value.lower() == "turbo":
+				status = self.device_objects[address].set_turbo("ON")
+				
+				#status = self.device_objects[address].set_mute("OFF")
+			elif value.lower() == "mute":				
+				status = self.device_objects[address].set_mute("ON")
+				
+			else:
+				#status = self.device_objects[address].set_mute("ON")
+				#status = self.device_objects[address].set_turbo("OFF")
+				status = self.device_objects[address].set_fanspeed(value)
+
 			if status :
 				self.publish_mqtt_info(status)
 				
@@ -351,8 +371,18 @@ class AcToMqtt:
 				return
 				
 		elif function == "fanspeed_homeassistant":
-			
-			status = self.device_objects[address].set_fanspeed(value)
+			if value.lower() == "turbo":
+				status = self.device_objects[address].set_turbo("ON")
+				
+				#status = self.device_objects[address].set_mute("OFF")
+			elif value.lower() == "mute":				
+				status = self.device_objects[address].set_mute("ON")
+				
+			else:
+				#status = self.device_objects[address].set_mute("ON")
+				#status = self.device_objects[address].set_turbo("OFF")
+				status = self.device_objects[address].set_fanspeed(value)
+			 
 			if status :
 				self.publish_mqtt_info(status)
 				

@@ -10,7 +10,7 @@ import threading
 import parser
 import struct
 
-version = "1.0.2"
+version = "1.1.1"
 
 def gendevice(devtype , host, mac,name=None, cloud=None,update_interval = 0):
   #print format(devtype,'02x')
@@ -284,6 +284,7 @@ class ac_db(device):
 			MEDIUM 	= 	0b00000010
 			HIGH 	=	0b00000001
 			AUTO 	= 	0b00000101  
+			NONE 	=	0b00000000
 		
 		 		
 		class MODE:
@@ -410,12 +411,42 @@ class ac_db(device):
 		mode = self.STATIC.FAN.__dict__.get(mode_text.upper())
 		if mode != None:
 			self.status['fanspeed'] = mode
+			self.status['turbo']  = self.STATIC.ONOFF.OFF
+			self.status['mute']  = self.STATIC.ONOFF.OFF
 			self.set_ac_status()
 			return self.make_nice_status(self.status)
 		else:
 			self.logger.debug("Not found mode value %s" , str(mode_text))
 			return False
-	
+	def set_mute(self,value):
+		##Make sure latest info as cannot just update one things, have set all
+		self.get_ac_states()
+		
+		mode = self.STATIC.ONOFF.__dict__.get(value)
+		if mode != None:
+			self.status['mute'] = mode
+			self.status['turbo']  = self.STATIC.ONOFF.OFF			
+			self.status['fanspeed'] = self.STATIC.FAN.NONE
+			self.set_ac_status()
+			return self.make_nice_status(self.status)
+		else:
+			self.logger.debug("Not found mute value %s" , str(value))
+			return False
+	def set_turbo(self,value):
+		##Make sure latest info as cannot just update one things, have set all
+		self.get_ac_states()
+		
+		mode = self.STATIC.ONOFF.__dict__.get(value)
+		if mode != None:
+			self.status['turbo'] = mode
+			self.status['mute']  = self.STATIC.ONOFF.OFF
+			self.status['fanspeed'] = self.STATIC.FAN.NONE
+			self.set_ac_status()
+			return self.make_nice_status(self.status)
+		else:
+			self.logger.debug("Not found Turbo value %s" , str(value))
+			return False
+
 	def set_homekit_mode(self,status):
 		if type(status) is not str:
 			self.logger.debug('Status variable is not string %s',type(status))
@@ -587,6 +618,8 @@ class ac_db(device):
 			self.status['turbo'] =response_payload[14] >> 6& 0b00000001
 			self.status['clean'] = response_payload[18] >> 2& 0b00000001
 			
+
+
 			self.status['lastupdate'] = time.time()
 			 
 			return self.make_nice_status(self.status)
@@ -610,8 +643,7 @@ class ac_db(device):
 		status_nice['mildew'] = self.get_key(self.STATIC.ONOFF.__dict__,status['mildew'])
 		status_nice['health'] = self.get_key(self.STATIC.ONOFF.__dict__,status['health'])
 		status_nice['fixation_h'] = self.get_key(self.STATIC.FIXATION.VERTICAL.__dict__,status['fixation_h'])
-		status_nice['fanspeed']  = self.get_key(self.STATIC.FAN.__dict__,status['fanspeed'])
-		status_nice['fanspeed_homeassistant']  = status_nice['fanspeed'].capitalize()
+		
 		
 		status_nice['ifeel'] = self.get_key(self.STATIC.ONOFF.__dict__,status['ifeel'])
 		status_nice['mute'] = self.get_key(self.STATIC.ONOFF.__dict__,status['mute'])
@@ -648,7 +680,18 @@ class ac_db(device):
 			status_nice['mode_homeassistant'] = "fan_only"
 		else:
 			status_nice['mode_homeassistant'] = "Error"
- 			
+ 		
+		##Make fanspeed logic
+		status_nice['fanspeed']  = self.get_key(self.STATIC.FAN.__dict__,status['fanspeed'])
+		status_nice['fanspeed_homeassistant']  = self.get_key(self.STATIC.FAN.__dict__,status['fanspeed']).title()
+
+		if status_nice['mute'] == "ON":
+			status_nice['fanspeed_homeassistant']  = "Mute"
+			status_nice['fanspeed']  = "MUTE"
+		elif status_nice['turbo'] == "ON":
+			status_nice['fanspeed_homeassistant']  = "Turbo"
+			status_nice['fanspeed']  = "TURBO"
+		
 			
 		return status_nice
 			

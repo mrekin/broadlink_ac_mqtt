@@ -1,4 +1,8 @@
 # Broadlink Air Conditioners to mqtt  
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](http://www.paypal.me/liaanvdm)
+
+Docker version:  https://github.com/broadlink-ac/broadlink_ac_mqtt_docker
+
 #### Air Conditioners compatibility 
   * Dunham bush --> Tested and working
 
@@ -7,7 +11,9 @@
   * Rinnai  --> Tested and working .. autodiscovery name seems to be buggy
   * Kenwood --> In Testing
   * Tornado X (2019 and up) --> Tested and working
+    * Tornado top wifi 12x a.c Tested and reported as working
   * AUX ASW-H09A4/DE-R1DI (Broadlink module) --> Tested and working
+  * Ballu BSUI/IN-12HN8 (with intergated Wi-Fi module and AC Freedom app). --> Tested and working
   * In theory any Broadlink devtype == 0x4E2a (20010) using the AC Freedom APP
 
 #### Installation: 
@@ -123,6 +129,8 @@ climate:
   - Low
   - Medium
   - High
+  - Turbo
+  - Mute
   max_temp: 32.0
   min_temp: 16.0
   mode_command_topic: /aircon/b4430dce73f1/mode_homeassistant/set
