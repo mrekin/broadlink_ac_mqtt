@@ -227,8 +227,13 @@ class AcToMqtt:
 					else:
 						""
 						#print ("value NOT Same key:%s, value:%s vs : %s" %  (key,value,self.previous_status[status['macaddress']][key]))										
+    		##If retain is set for MQTT, then retain it		
+			if(self.config["mqtt_auto_discovery_topic_retain"]):
+				retain = self.config["mqtt_auto_discovery_topic_retain"]
+			else:
+				retain = False	
 			
-			pubResult = self._publish(self.config["mqtt_topic_prefix"] + status['macaddress']+'/'+key+ '/value',value)			
+			pubResult = self._publish(self.config["mqtt_topic_prefix"] + status['macaddress']+'/'+key+ '/value',value,retain = retain)			
 			
 			
 			if pubResult != None:					
@@ -263,7 +268,7 @@ class AcToMqtt:
 		
 		
 		##Set last will and testament
-		self._mqtt.will_set(self.config["mqtt_topic_prefix"]+"LWT","offline",True)
+		self._mqtt.will_set(self.config["mqtt_topic_prefix"]+"LWT","offline",True,retain= True)
 		
 		##Auth		
 		if self.config["mqtt_user"] and self.config["mqtt_password"]:			
@@ -432,5 +437,5 @@ class AcToMqtt:
 		client.subscribe(sub_topic)
 		logger.debug('Listing on %s for messages' % (sub_topic))
 		##LWT
-		self._publish(self.config["mqtt_topic_prefix"]+'LWT','online')
+		self._publish(self.config["mqtt_topic_prefix"]+'LWT','online', retain= True)
 
